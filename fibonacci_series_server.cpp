@@ -14,12 +14,12 @@ bool add(beginner_tutorials::Fibonacci::Request  &req,
   {
   for (int i=0;i<a-2;i++)
   {
-	  ans=n1+n2;
-	  n1=n2;
-	  n2=ans;
+          ans=n1+n2;
+          n1=n2;
+          n2=ans;
   }
   }
-  ros::Duration(5).sleep(); 
+  ros::Duration(5).sleep();
   res.out=ans;
   ROS_INFO("request: x=%ld, y=%ld", (long int)req.n);
   ROS_INFO("sending back response: [%ld]", (long int)res.out);
@@ -36,3 +36,4 @@ int main(int argc, char **argv)
 
   return 0;
 }
+

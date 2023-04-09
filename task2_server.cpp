@@ -1,33 +1,56 @@
 #include "ros/ros.h"
 #include "beginner_tutorials/task2.h"
+#include "beginner_tutorials/sleep.h"
 #include <cmath>
-//service
-bool disp(beginner_tutorials::task2::Request  &req,
-         beginner_tutorials::task2::Response &res, int &x1,int &y1,int &z1)
+class displacement{
+public:
+  double disp(beginner_tutorials::task2::Request  &req,
+         beginner_tutorials::task2::Response &res)
 {
+        ros::NodeHandle n;
+        ros::ServiceClient client = n.serviceClient<beginner_tutorials::task2>("sleep_server");
 int x2= req.x;
 int y2= req.y;
 int z2= req.z;
-int disp= abs(x2-x1) + abs(y2-y1) + abs(z2-z1);
-int time= disp;
-x1= x2;
-y1= y2;
-z1= z2;
-ros::Duration(time).sleep();
-ROS_INFO ("setpoint %ld, %ld, %ld attained", (long int)req.n);
+disp_x=abs(x2-x1);
+disp_y=abs(y2-y1);
+disp_z=abs(z2-z1);
+double disp=disp_x+disp_y+disp_z;
+beginner_tutorials::sleep srv;
+srv.request.disp= disp;
+if (client.call(srv)) {
+      ROS_INFO("achieving displacement...");
+    }
+    else {
+      ROS_ERROR("Failed to call service sleep_server");
+      return 1;
+    }
+    ros::ServiceServer S1 = n.advertiseService("task2",sleep);
+    ros::spin();
 }
+bool sleep(beginner_tutorials::sleep::Request  &req,
+         beginner_tutorials::sleep::Response &res)
+{
+        float time = req.disp;
+         ros::Duration(time).sleep();
+ROS_INFO ("setpoint %ld, %ld, %ld attained", (long int)req.n);
+return 0;
+}
+private:
+	int x1=0;
+	int y1=0;
+	int z1=0;
+	int disp_x=0;
+	int disp_y=0;
+	int disp_z=0;
+};
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "task2_server");
+  displacement d1;
   ros::NodeHandle n;
-
-  int x1=0;
-  int y1=0;
-  int z1=0;
-  ros::ServiceServer service = n.advertiseService("task2",disp(x1,y1,z1);
+  ros::ServiceServer service = n.advertiseService("task2",disp);
   ROS_INFO("calculating displacement...");
   ros::spin();
-
   return 0;
 }
-

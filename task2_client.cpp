@@ -2,42 +2,35 @@
 #include "beginner_tutorials/task2.h"
 #include <cstdlib>
 #include "std_msgs/Int64.h"
-
-void ChatterCallBack(const std_msgs::Int64::ConstPtr& msg)
-{
-	ros::NodeHandle n;
-	ros::ServiceClient task_client = n.serviceClient<beginner_tutorials::task2>("displacement");
-	beginner_tutorials::task2 srv;
-	srv.request.x = msg->data;
-	if (task_client.call(srv))
-	{
-	ros::Publisher pub = n.advertise<std_msgs::Int64>("setpoint", 1000);
-	long int res = (long int)srv.response.d;
-while (ros::ok())
-{
-     std_msgs::Int64 int_msg;
-      int_msg.data = res;
-      ROS_INFO("%ld",int_msg.data);
-      pub.publish(int_msg);
-      ros::spinOnce();
-      }
-}
-  else
-  {
-    ROS_ERROR("Failed to call service displacement");
-  }
-return;
-}
+#include <xmlrpcpp/XmlRpc.h>
 
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "disp_client");
 	ros::NodeHandle n;
-
-	ros::Subscriber sub = n.subscribe("set_points",1000, ChatterCallBack);
-	ros::ServiceClient client = n.serviceClient<beginner_tutorials::task2>("displacement");
-
+	YAML::Node config = YAML::LoadFile("setpoint.yaml");
+	ros::ServiceClient client = n.serviceClient<beginner_tutorials::task2>("task2_server");
+	XmlRpc::XmlRpcServer xmlrpcServer;
+        xmlrpcServer.bindAndListen("my_rpc_server", 8080);
+        xmlrpcServer.bind("my_function", &myXmlRpcFunction);
 	beginner_tutorials::task2 srv;
+	for (const auto& coord : config) {
+    long int x = coord["x"].as<long int>();
+    long int y = coord["y"].as<long int>();
+    long int z = coord["z"].as<long int>();
+	beginner_tutorials::task2 srv;
+    srv.request.x = x;
+    srv.request.y = y;
+    srv.request.z = z;
+    if (client.call(srv)) {
+      ROS_INFO("setpoints %ld, %ld, %ld ...",x,y,z);
+    }
+    else {
+      ROS_ERROR("Failed to call service task2_server");
+      return 1;
+    }
+  }
+	
 	ros::spin();
 
 	return 0;
